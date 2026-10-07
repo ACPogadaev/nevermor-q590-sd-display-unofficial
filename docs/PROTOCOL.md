@@ -1,45 +1,45 @@
-# Nevermor Q590-SD / SD-Q590 numeric display protocol
+# Числовой протокол дисплея Nevermor Q590-SD / SD-Q590
 
-Investigated OEM software: Digital 1.0.0.3, `DeviceDriver.exe`. The protocol was recovered by inspecting the vendor executable using its shipped symbols and reading the active HID descriptors. No OEM application code or firmware is redistributed in this repository.
+Протокол определён по Digital 1.0.0.3 (`DeviceDriver.exe`) с использованием поставляемых с ним символов и чтения дескрипторов HID. Код оригинального приложения и прошивка в репозитории не распространяются.
 
-| HID property | Required value |
+| Свойство HID | Требуемое значение |
 |---|---|
-| Vendor ID | 0x1A2C |
-| Product ID | 0x4E84 |
-| Usage page | 0xFF01 |
-| Usage | 1 |
-| Feature report ID | 7 |
-| Tested report length, including ID | 64 bytes |
+| Идентификатор производителя, VID | 0x1A2C |
+| Идентификатор продукта, PID | 0x4E84 |
+| Страница использования | 0xFF01 |
+| Использование | 1 |
+| Идентификатор отчёта Feature Report | 7 |
+| Проверенный размер отчёта с идентификатором | 64 байта |
 
-The tested Windows interface is MI_01 / Col07 and may identify itself as `USB Gaming Keyboard`, manufacturer `SEMICO`. The app enumerates HID interfaces and checks attributes, usage, and the report ID. It refuses to send when multiple matching interfaces are found. No serial COM connection is used.
+Проверенный интерфейс Windows — MI_01 / Col07. Он может называться `USB Gaming Keyboard`, производитель — `SEMICO`. Программа перебирает интерфейсы HID и проверяет атрибуты, назначение и идентификатор отчёта. При нескольких совпадениях передача приостанавливается. Последовательный порт COM не используется.
 
-## Update frame
+## Пакет обновления
 
-Send a feature report through `HidD_SetFeature`:
+Отчёт передаётся через `HidD_SetFeature`.
 
-| Byte | Value |
+| Байт | Значение |
 |---|---|
-| 0 | 0x07, report ID |
-| 1 | Lower number: tens digit |
-| 2 | Lower number: ones digit |
-| 3 | Upper number: thousands digit |
-| 4 | Upper number: hundreds digit |
-| 5 | Upper number: tens digit |
-| 6 | Upper number: ones digit |
-| 7 onward | Zero |
+| 0 | 0x07 — идентификатор отчёта |
+| 1 | Десятки нижнего числа |
+| 2 | Единицы нижнего числа |
+| 3 | Тысячи верхнего числа |
+| 4 | Сотни верхнего числа |
+| 5 | Десятки верхнего числа |
+| 6 | Единицы верхнего числа |
+| 7 и далее | Нули |
 
-Digits are numeric values 0–9, not ASCII or segment masks. Lower range: 0–99; upper range: 0–9999. For lower 53 and upper 913:
+Цифры передаются как числовые значения 0–9, а не ASCII-коды или маски сегментов. Диапазон снизу — 0–99, сверху — 0–9999. Пример для нижнего числа 53 и верхнего 913:
 
 ```text
 07 05 03 00 09 01 03 00 00 ...
 ```
 
-The OEM implementation supplied 65 bytes, although the tested descriptor reports 64 including the report ID. The independent controller uses the descriptor length, and successful 64-byte sends were verified on hardware. The owner visually confirmed new CPU-load/GPU-temperature values.
+Digital отправлял 65 байт, хотя дескриптор проверенного устройства указывает 64 байта с идентификатором отчёта. Nevermor Display использует размер из дескриптора. Передача пакетов из 64 байт была проверена: новые значения загрузки CPU и температуры GPU появлялись на кулере.
 
-Clock 13:15 is represented as 1315 in 24-hour mode or 0115 in 12-hour mode. A date is DDMM. The known update command provides six decimal digits; fixed printed labels, punctuation, leading-zero rendering, and letter support are not controlled by this frame.
+Время 13:15 кодируется как 1315 для формата 24 часа или 0115 для формата 12 часов. Дата — ДДММ. Известная команда передаёт шесть десятичных цифр. Напечатанные подписи, знаки пунктуации, отображение ведущих нулей и букв этим пакетом не управляются.
 
-## Scope
+## Границы реализации
 
-Only the numeric-update feature report is implemented. No firmware update or unknown device commands are sent. A reported CH340/CH341 VID 1A86 PID 7523 device is not the interface selected by the investigated OEM update routine. Compatibility with other revisions or other coolers using the same USB chip has not been established.
+Реализовано только обновление числовых значений. Команды обновления прошивки и неизвестные команды не отправляются. CH340/CH341 с VID 1A86 / PID 7523 не является интерфейсом, выбранным функцией обновления в Digital. Совместимость с другими ревизиями или кулерами на том же USB-чипе не установлена.
 
-The OEM app originally obtained CPU temperature and motherboard fan RPM from its LibreHardwareMonitor helper. The independent controller does not launch that helper or read its shared memory.
+Digital получал температуру CPU и обороты вентиляторов через вспомогательный компонент LibreHardwareMonitor. Nevermor Display не запускает этот компонент Digital и не читает его общую память.

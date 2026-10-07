@@ -1,60 +1,72 @@
-# Nevermor Q590-SD / SD-Q590 — independent unofficial display software
+# Nevermor Q590-SD / SD-Q590 — независимое неофициальное ПО для дисплея
 
 **Проект является независимым неофициальным программным обеспечением и не связан с Nevermor. Все товарные знаки принадлежат их владельцам. Использование осуществляется на собственный риск. Перед применением на реальном оборудовании необходимо проверить совместимость и требования производителя.**
 
-Independent, unofficial software, not affiliated with Nevermor. All trademarks belong to their owners. Use at your own risk; verify compatibility and manufacturer requirements before using on real hardware.
+**Nevermor Display 1.3.1** — программа для управления цифровым дисплеем процессорного кулера **Nevermor Q590-SD**, также известного как **Nevermor SD-Q590**. Выбирайте показатели для двух полей: температуру процессора, обороты вентилятора, загрузку CPU/GPU, использование памяти, часы в формате 12/24 часа, секунды, дату или заданное число.
 
-**Nevermor Display 1.3.1** is a configurable Windows controller for the numeric display on the **Nevermor Q590-SD**, also sold as **Nevermor SD-Q590**. CPU temperature, fan RPM, CPU/GPU load, memory usage, a 12/24-hour clock, seconds, a date, or your own fixed number can be selected for the two fields.
+Приложение, библиотека датчиков и подписанный драйвер устанавливаются одним файлом. Отдельные Digital, AIDA64 и другие программы мониторинга для работы не нужны. Здесь доступны исходники, инструкция и готовый установщик для Windows.
 
-**Программа для дисплея кулера Nevermor Q590-SD / SD-Q590.** Исходники и единый установщик: приложение + библиотека датчиков + подписанный драйвер. Запросы «Q590-SD программа», «Nevermor SD-Q590 драйвер дисплея», «Q590-SD display software» относятся к этому проекту.
+[Подробная инструкция](docs/README.ru.md) · [Почему Defender блокирует Digital](docs/DIGITAL-BLOCKING.ru.md) · [Протокол USB](docs/PROTOCOL.md) · [Проверки и ограничения](docs/VALIDATION.md) · [История изменений](CHANGELOG.md)
 
-[Русская инструкция](docs/README.ru.md) · [Почему Defender блокирует Digital](docs/DIGITAL-BLOCKING.ru.md) · [USB protocol](docs/PROTOCOL.md) · [Validation](docs/VALIDATION.md) · [Changelog](CHANGELOG.md)
+## Скачать и установить
 
-## Download and install
+Скачайте [NevermorDisplay-1.3.1-Setup.exe](https://github.com/ACPogadaev/nevermor-q590-sd-display-unofficial/releases/download/v1.3.1/NevermorDisplay-1.3.1-Setup.exe) со [страницы релиза](https://github.com/ACPogadaev/nevermor-q590-sd-display-unofficial/releases/tag/v1.3.1). Кнопка **Code → Download ZIP** скачивает исходники, а не готовую программу.
 
-Download [NevermorDisplay-1.3.1-Setup.exe](https://github.com/ACPogadaev/nevermor-q590-sd-display-unofficial/releases/download/v1.3.1/NevermorDisplay-1.3.1-Setup.exe) from the [release page](https://github.com/ACPogadaev/nevermor-q590-sd-display-unofficial/releases/tag/v1.3.1). **Code → Download ZIP** downloads source code.
+1. Закройте Digital через меню значка в трее. Для первой проверки также закройте другие программы аппаратного мониторинга.
+2. Запустите установщик и подтвердите обычный запрос прав Windows. Во время установки компоненты из интернета не скачиваются.
+3. Перезагрузите Windows, если установщик сообщает о необходимости перезагрузки. При ошибке передачи USB после установки также попробуйте перезагрузку: на проверенном устройстве это восстановило работу.
+4. Запустите Nevermor Display, выберите показатели для верхнего и нижнего полей, интервал обновления и нажмите **«Сохранить»**. Закрытие окна сворачивает программу в трей; кнопка **«Выход»** завершает её.
 
-1. Exit Digital from its tray menu. Close other hardware-monitoring utilities for the initial check.
-2. Run the installer and approve the normal Windows UAC prompt. No components are downloaded during installation.
-3. Restart Windows if the installer requests it. A USB transmission error after setup also warrants a restart; one tested device recovered that way.
-4. Start Nevermor Display. Select the upper/lower values and refresh interval, then Save. Closing the window hides it in the tray; **Выход** exits it.
+Требования: **Windows 10/11 x64**, .NET Framework 4.7.2 или новее. Интерфейс программы — на русском. Приложение устанавливается в `%ProgramFiles%\Nevermor Display`, настройки хранятся в `%LOCALAPPDATA%\NevermorDisplay`.
 
-Windows 10/11 x64, .NET Framework 4.7.2 or newer. The UI is currently Russian. Installed to `%ProgramFiles%\Nevermor Display`; settings are in `%LOCALAPPDATA%\NevermorDisplay`. Default: CPU load above, CPU temperature below, 2-second refresh, Windows clock format, autostart off.
+По умолчанию сверху выводится загрузка CPU, снизу — температура CPU. Обновление раз в 2 секунды, формат часов как в Windows, автозапуск выключен.
 
-The installer includes **LibreHardwareMonitor 0.9.6** and the unchanged official **PawnIO 2.2.0** installer. No AIDA64, Digital, Python, or separate monitoring application is required. PawnIO is a third-party driver by namazso. Its original installer and components are signed; our controller and combined installer are currently **unsigned**. The combined installer verifies the original PawnIO hash and signature. It does not disable Windows security or use the unrestricted driver edition.
+В установщик включены **LibreHardwareMonitor 0.9.6** и неизменённый официальный установщик **PawnIO 2.2.0**. PawnIO — сторонний драйвер namazso. Оригинальный установщик PawnIO и его компоненты подписаны издателем; наше приложение и общий установщик пока **не имеют подписи издателя**. Общий установщик проверяет контрольную сумму и подпись оригинального компонента. Он не отключает защиту Windows, не добавляет антивирусных исключений и не использует версию драйвера без ограничений.
 
-## Display choices
+## Что можно выводить
 
-| Metric | Upper: 4 digits | Lower: 2 digits |
+| Показатель | Верхнее поле: 4 цифры | Нижнее поле: 2 цифры |
 |---|---|---|
-| CPU temperature / CPU load | Yes | Yes |
-| CPU clock in MHz | Yes | — |
-| GPU temperature / GPU load | Yes | Yes |
-| GPU clock in MHz | Yes | — |
-| RAM usage: percent / whole GB | Yes | Yes |
-| Selected motherboard fan RPM | Yes | — |
-| Clock: Windows / 12-hour / 24-hour | Yes | — |
-| Clock seconds | Yes | Yes |
-| Date: DDMM | Yes | — |
-| Fixed number | Yes | Yes |
+| Температура / загрузка CPU | Да | Да |
+| Частота CPU, МГц | Да | — |
+| Температура / загрузка GPU | Да | Да |
+| Частота GPU, МГц | Да | — |
+| Использование RAM: проценты / целые ГБ | Да | Да |
+| Обороты выбранного вентилятора, об/мин | Да | — |
+| Часы: формат Windows / 12 / 24 часа | Да | — |
+| Секунды часов | Да | Да |
+| Дата: ДДММ | Да | — |
+| Заданное число | Да | Да |
 
-Upper range 0–9999; lower range 0–99. Values are rounded/clamped, so 100% appears as 99 below. The physical labels and °C symbol remain. The implemented command sends digits; AM/PM is shown in the app preview, not as letters on the cooler. Select **12 часов** for 13:15 → 1:15 PM. A fan must be selected explicitly when the CPU channel is not identified. Missing sensor values pause transmission rather than becoming false zeroes.
+Верхнее поле поддерживает числа 0–9999, нижнее — 0–99. Значения округляются и ограничиваются диапазоном; поэтому 100% в нижнем поле отображается как 99. Напечатанные на дисплее подписи и символ °C сохраняются.
 
-## Low overhead and autostart
+Известная команда передаёт только цифры. Обозначение AM/PM видно в окне программы, но не буквами на кулере. Выберите **«12 часов»**, чтобы вместо 13:15 показывать 1:15 PM. Если канал вентилятора CPU не определён, нужный датчик следует выбрать вручную. При отсутствии выбранных данных отправка приостанавливается; ложные нули не подставляются.
 
-CPU load and RAM use come from Windows APIs. NVIDIA metrics use the installed GPU driver's NVML. Other hardware groups are opened only when needed. One polling operation runs at a time; interval is 1–60 seconds, usually 2–5 seconds for sensors. The hidden window stops repainting. Normal operation makes no network requests and starts no separate polling service. The UI shows poll time and memory; measurements and limits are in [validation](docs/VALIDATION.md).
+## Нагрузка на систему и автозапуск
 
-CPU temperature, CPU clock and motherboard fan sensors require administrator rights and PawnIO. Manual launch requests elevation when those metrics are selected. Autostart can use a current-user elevated scheduled task with a 10-second login delay. Autostart stays off until enabled. Disable Digital's autostart separately; this app pauses sending if `DeviceDriver.exe` is detected.
+Загрузка CPU и использование RAM читаются штатными функциями Windows. Показатели NVIDIA — через NVML уже установленного драйвера видеокарты. Остальные группы аппаратных датчиков открываются только по необходимости. Одновременно выполняется не более одного опроса. Интервал настраивается от 1 до 60 секунд; для датчиков обычно достаточно 2–5 секунд.
 
-## Why Digital stopped reading sensors
+Когда окно скрыто, его отрисовка прекращается. При обычной работе программа не обращается к интернету и не запускает отдельную службу периодического опроса. В окне видны время опроса и потребление памяти. Измерения и их ограничения приведены в [описании проверок](docs/VALIDATION.md).
 
-In the investigated installation, Defender quarantined Digital's old WinRing0 sensor driver as `VulnerableDriver:WinNT/Winring0`. Microsoft's advisory confirms this is a known vulnerable driver. Our first local build shared that dependency; 1.3.1 uses PawnIO instead. See the [evidence, explanation and limits](docs/DIGITAL-BLOCKING.ru.md). No antivirus exclusions are added by this project.
+Для температуры и частоты CPU, а также вентиляторов материнской платы требуются права администратора и PawnIO. При ручном запуске с выбранными аппаратными датчиками программа запросит повышение прав.
 
-## USB compatibility
+Автозапуск можно включить в настройках. При настройке из повышенного процесса используется задание планировщика Windows для текущего пользователя с правами администратора и задержкой 10 секунд после входа. До включения пользователем автозапуск остаётся выключенным. Автозапуск Digital нужно отключить отдельно: если найден `DeviceDriver.exe`, наша программа приостанавливает передачу.
 
-Tested display: **HID VID 1A2C / PID 4E84**, usage page FF01, usage 1, Feature Report 7. It may appear as USB Gaming Keyboard / SEMICO. The app validates the vendor collection and refuses ambiguous matches. CH340/CH341 **VID 1A86 / PID 7523** is not used by the investigated display path. See [protocol notes](docs/PROTOCOL.md). One Q590-SD owner confirmed CPU temperature and physical display operation after installing 1.3.1 and restarting; fan-channel mapping and other revisions require verification.
+## Почему Digital перестал показывать датчики
 
-## Build from source
+В исследованной установке Defender помещал старый драйвер датчиков WinRing0 из Digital в карантин с обнаружением `VulnerableDriver:WinNT/Winring0`. Microsoft подтверждает, что WinRing0 относится к известным уязвимым драйверам. Первая локальная версия нашего приложения использовала тот же компонент; версия 1.3.1 перешла на PawnIO.
+
+Подтверждённые факты, причины и пределы выводов описаны в [отдельном документе](docs/DIGITAL-BLOCKING.ru.md). Проект не добавляет антивирусных исключений.
+
+## Совместимость USB
+
+Проверенный дисплей использует **HID VID 1A2C / PID 4E84**, страницу использования FF01, использование 1 и отчёт Feature Report 7. В Windows устройство может называться USB Gaming Keyboard / SEMICO. Программа проверяет интерфейс производителя и отказывается от передачи при неоднозначном совпадении.
+
+CH340/CH341 с **VID 1A86 / PID 7523** в исследованном пути передачи на дисплей не используется. Подробнее — в [описании протокола](docs/PROTOCOL.md).
+
+После установки версии 1.3.1 температура CPU стала читаться корректно, а после перезагрузки заработал и физический дисплей Q590-SD. Соответствие канала вентилятора CPU и другие ревизии оборудования требуют проверки.
+
+## Сборка из исходников
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\scripts\build.ps1
@@ -62,8 +74,12 @@ powershell -ExecutionPolicy Bypass -File .\scripts\test.ps1
 powershell -ExecutionPolicy Bypass -File .\scripts\package.ps1
 ```
 
-The Windows .NET Framework C# compiler is used; Visual Studio is not required. Build-time downloads restore pinned official NuGet packages and the official PawnIO installer; normal installation is offline. `-Offline` is available after populating the cache. `build/app` contains the app; `dist` contains the single installer and SHA-256 checksum. Self-tests do not send USB reports or enable autostart.
+Используется компилятор C# из Windows .NET Framework; Visual Studio не требуется. При сборке скачиваются официальные пакеты NuGet фиксированных версий и официальный установщик PawnIO. Контрольные суммы проверяются. После заполнения кэша доступен параметр `-Offline`; установка готового пакета выполняется без интернета.
 
-## License
+Приложение собирается в `build/app`; единый установщик и контрольная сумма SHA-256 — в `dist`. Самопроверки не отправляют USB-команды и не включают автозапуск.
 
-Our controller and installer source: [MIT](LICENSE). Dependencies have separate licenses; signed PawnIO binaries are proprietary and redistributed unmodified under the publisher's redistribution terms. See [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md), [dependencies.json](dependencies.json), and [licenses](licenses). OEM executables, firmware, personal settings and diagnostic logs are not distributed.
+## Лицензия
+
+Исходники нашего приложения и установщика распространяются по лицензии [MIT](LICENSE). Зависимости имеют отдельные лицензии. Подписанные двоичные компоненты PawnIO проприетарные; оригинальный установщик распространяется без изменений на условиях издателя.
+
+См. [уведомления о сторонних компонентах](THIRD-PARTY-NOTICES.md), [перечень зависимостей](dependencies.json) и [лицензии](licenses). Оригинальные исполняемые файлы Digital, прошивки, личные настройки и диагностические журналы не распространяются.

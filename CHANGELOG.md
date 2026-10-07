@@ -1,14 +1,14 @@
-# Changelog
+# История изменений
 
-## 1.3.1 — 2026-10-07
+## 1.3.1 — 7 октября 2026 года
 
-- Offline single installer: controller, LibreHardwareMonitor 0.9.6 and signed official PawnIO 2.2.0, no separate AIDA64/Digital requirement.
-- Replace the old WinRing0 sensor backend. Preserve Windows security settings and verify the original driver installer's hash/signature.
-- Install, update and uninstall support; preserve settings and an existing compatible shared driver.
-- Fix Cyrillic Start menu shortcuts through IShellLinkW/IPersistFile on an STA thread. Optional shortcut failure no longer aborts installation.
-- CPU temperature confirmed by the owner; physical USB display recovered after a Windows restart. USB protocol unchanged.
-- Document Defender's confirmed WinRing0 detection and distinguish it from a separate transient USB failure.
+- Единый автономный установщик: приложение, LibreHardwareMonitor 0.9.6 и официальный подписанный PawnIO 2.2.0. Отдельные AIDA64 и Digital не требуются.
+- Старый компонент чтения датчиков WinRing0 заменён на PawnIO. Настройки защиты Windows сохраняются; контрольная сумма и подпись оригинального установщика драйвера проверяются.
+- Добавлены установка, обновление и удаление. Настройки и уже установленный совместимый общий драйвер сохраняются.
+- Исправлены русские ярлыки меню «Пуск» через IShellLinkW/IPersistFile в STA-потоке. Ошибка создания необязательного ярлыка больше не прерывает установку.
+- После установки температура CPU стала читаться корректно. После перезагрузки восстановилась передача на физический дисплей; протокол USB не менялся.
+- Описаны блокировка WinRing0 со стороны Defender и отдельный временный сбой USB.
 
-## Earlier local versions
+## Предыдущие локальные версии
 
-1.1 added Windows/12/24-hour clocks, AM/PM preview, seconds and DDMM dates. Initial versions provided selectable metrics, interval, tray mode and autostart. The first local sensor backend used WinRing0 and is superseded by 1.3.1.
+Версия 1.1 добавила часы в формате Windows / 12 / 24 часа, отображение AM/PM в окне программы, секунды и дату ДДММ. Первые версии поддерживали выбор показателей, интервал обновления, трей и автозапуск. В них использовался WinRing0; этот компонент заменён в версии 1.3.1.

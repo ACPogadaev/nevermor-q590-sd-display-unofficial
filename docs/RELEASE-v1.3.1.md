@@ -1,13 +1,28 @@
-# Nevermor Q590-SD / SD-Q590 — неофициальное ПО 1.3.1
+# Nevermor Q590-SD / SD-Q590 — независимое неофициальное ПО 1.3.1
 
 Проект является независимым неофициальным программным обеспечением и не связан с Nevermor. Все товарные знаки принадлежат их владельцам. Использование осуществляется на собственный риск. Перед применением на реальном оборудовании необходимо проверить совместимость и требования производителя.
 
-Download **NevermorDisplay-1.3.1-Setup.exe** below. One offline installation includes the application, LibreHardwareMonitor 0.9.6 and the unchanged official signed PawnIO 2.2.0 installer. AIDA64, Digital and separate monitoring software are not required. Windows 10/11 x64 with .NET Framework 4.7.2 or later; current UI is Russian. Our app and combined installer are unsigned; the embedded original PawnIO installer/components are signed by their publisher.
+Скачайте **NevermorDisplay-1.3.1-Setup.exe** из списка файлов ниже. Один автономный установщик включает приложение, LibreHardwareMonitor 0.9.6 и неизменённый официальный подписанный установщик PawnIO 2.2.0. Отдельные AIDA64, Digital и другие программы мониторинга не требуются.
 
-Закройте Digital через трей. Запустите единый установщик, подтвердите UAC, установите и при необходимости перезагрузите Windows. Выберите показатели, интервал обновления и автозапуск в окне программы. По умолчанию загрузка CPU сверху, температура CPU снизу, опрос раз в 2 секунды, автозапуск выключен.
+Требования: **Windows 10/11 x64**, .NET Framework 4.7.2 или новее. Интерфейс — на русском. Наше приложение и общий установщик пока не имеют подписи издателя; встроенный оригинальный установщик PawnIO и его компоненты подписаны своим издателем. PawnIO — сторонний компонент namazso, а не собственный драйвер проекта.
 
-CPU/GPU readings, RAM usage, fan RPM, 12/24-hour clock, seconds, DDMM date and fixed numbers. Physical limits: four digits above, two below; printed labels remain. CPU/RPM require elevation and the bundled driver. PawnIO is a third-party component by namazso, not this project's own driver.
+## Установка и запуск
 
-The old WinRing0 backend has been replaced. See the repository's explanation of Defender's confirmed Digital detection. Windows security settings are not weakened. Cyrillic Start menu shortcut installation is fixed. The owner confirmed CPU temperature and physical display operation after restart on one Q590-SD; fan mapping, actual login autostart and other revisions need further verification. No general compatibility guarantee.
+1. Закройте Digital через значок в трее.
+2. Запустите единый установщик, подтвердите запрос прав Windows и выполните установку. Интернет для установки не нужен.
+3. При необходимости перезагрузите Windows.
+4. В окне программы выберите показатели, интервал обновления и автозапуск, нажмите **«Сохранить»**.
 
-`SHA256SUMS.txt` verifies the installer. Source is in the repository. The first published release contains the same 1.3.1 installer tested by the owner; no experimental USB transport changes are included.
+По умолчанию сверху выводится загрузка CPU, снизу — температура CPU, обновление раз в 2 секунды, автозапуск выключен.
+
+## Возможности
+
+Температура и загрузка CPU/GPU, частота процессора и видеокарты, использование RAM, обороты выбранного вентилятора, часы в формате 12/24 часа, секунды, дата ДДММ и заданные числа. На дисплее доступны четыре цифры сверху и две снизу; напечатанные подписи сохраняются. Для аппаратных датчиков CPU и оборотов вентилятора нужны права администратора и включённый в пакет драйвер.
+
+## Что исправлено и проверено
+
+Старый компонент WinRing0 заменён на PawnIO. Причина подтверждённой блокировки Digital со стороны Defender описана в [документации проекта](https://github.com/ACPogadaev/nevermor-q590-sd-display-unofficial/blob/main/docs/DIGITAL-BLOCKING.ru.md). Настройки защиты Windows не ослабляются.
+
+Исправлено создание русских ярлыков меню «Пуск». После установки температура CPU стала читаться корректно, а после перезагрузки заработал физический дисплей Q590-SD. Соответствие канала вентилятора CPU, автозапуск после реального входа и другие ревизии оборудования ещё требуют проверки.
+
+Файл **SHA256SUMS.txt** содержит контрольную сумму установщика. Исходники доступны в репозитории. Опубликован проверенный на Q590-SD установщик версии 1.3.1; экспериментальные изменения передачи USB в него не добавлялись.

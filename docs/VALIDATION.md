@@ -1,42 +1,38 @@
-# Validation and limits
+# Проверки и ограничения
 
-Hardware: Nevermor Q590-SD display, Windows x64, Ryzen 7 7700, RTX 4070 SUPER. This is validation on one physical device, not a compatibility claim for all board/cooler revisions.
+Проверки проводились на одном цифровом дисплее Nevermor Q590-SD: Windows x64, Ryzen 7 7700, RTX 4070 SUPER. Они не подтверждают совместимость со всеми ревизиями кулера и материнскими платами.
 
-## Completed on the initial local builds
+## Версия 1.3.1 — 7 октября 2026 года
 
-- Numeric USB HID reports accepted: 16 update snapshots over 30 seconds at a 2-second interval. The owner confirmed changed digits on the cooler.
-- Version 1.1 recheck: 8 successful update snapshots over 8.017 seconds, 12-hour clock above and NVIDIA temperature below, 1-second interval.
-- C# build, digit order/ranges/zero padding, settings validation/XML roundtrip, and scheduled-task XML/quoting.
-- Runtime metric changes, pause/resume, preview mode without USB writes, unavailable sensor handling, graceful tray exit, and visual UI review.
-- 12/24-hour conversion, 13:15 → 1:15 PM, midnight/noon/evening, Windows culture patterns and quoted literals, AM/PM preview, old XML migration, and date/seconds from a single time sample.
+После установки единого пакета приложение показало температуру CPU 44 °C. Передача USB первоначально завершалась ошибкой Win32 31, в том числе в режиме часов. После перезагрузки Windows дисплей заработал. Размер пакета и протокол USB не менялись; точная причина временного сбоя не установлена.
 
-## Initial tray resource measurement
+При интервале 2 секунды в окне отображалось около 0,99 мс на опрос и 61 МБ памяти. Это отдельное наблюдение, а не контролируемое измерение загрузки CPU.
 
-CPU load + NVIDIA temperature, 2-second refresh, actual USB updates, hidden window, 16 logical CPUs:
+Проверки установщика охватывают безопасные пути распаковки ZIP, контрольные суммы, подпись оригинального компонента PawnIO, обработку версии и кодов завершения драйвера, восстановление предыдущих файлов при ошибке обновления и сохранение неизвестных файлов. Проверены запись и чтение русских ярлыков из рабочего MTA-потока и продолжение установки при ошибке необязательного ярлыка.
 
-| Measurement | Result |
+Соответствие канала вентилятора CPU, частота CPU и автозапуск после реального входа в Windows ещё требуют отдельной проверки. Во время автоматических проверок драйверы не устанавливались и автозапуск не включался.
+
+## Проверки ранних версий
+
+- Приняты 16 числовых отчётов USB HID за 30 секунд при интервале 2 секунды. На кулере отобразились новые значения.
+- Версия 1.1: восемь успешных передач за 8,017 секунды, часы в формате 12 часов сверху и температура NVIDIA снизу, интервал 1 секунда.
+- Проверены сборка C#, порядок цифр, диапазоны, заполнение нулями, валидация и сохранение настроек XML, формирование задания планировщика и кавычки в аргументах.
+- Проверены переключение показателей, пауза, возобновление, предварительный просмотр без USB-команд, недоступные датчики и штатный выход из трея.
+- Проверены форматы 12/24 часа, преобразование 13:15 в 1:15 PM, полночь, полдень, вечер, формат Windows, AM/PM в окне программы, перенос старых настроек и согласованное время для даты и секунд.
+
+## Измерение нагрузки ранней версии в трее
+
+Режим: загрузка CPU и температура NVIDIA, интервал 2 секунды, реальная передача USB, скрытое окно, 16 логических процессоров.
+
+| Показатель | Результат |
 |---|---|
-| Duration | 45.032 seconds |
-| Process CPU time | 0.015625 seconds |
-| Percent of one logical CPU | 0.0347% |
-| Percent of total CPU | 0.0022% |
-| Working set | 72.58 MB |
-| Private bytes | 52.89 MB |
+| Продолжительность | 45,032 секунды |
+| Процессорное время приложения | 0,015625 секунды |
+| Доля одного логического процессора | 0,0347% |
+| Доля всей вычислительной мощности CPU | 0,0022% |
+| Рабочий набор памяти | 72,58 МБ |
+| Частная память процесса | 52,89 МБ |
 
-The initial local build used the OEM-distributed LibreHardwareMonitor DLL. The public build restores the official NuGet dependency instead. The preceding short measurement is not a new measurement of the public dependency build, and did not include CPU-temperature or motherboard-fan monitoring.
+Это измерение относится к ранней локальной сборке с библиотекой LibreHardwareMonitor из Digital. Температура CPU и вентиляторы материнской платы в этом режиме не опрашивались. Результаты нельзя переносить на текущую версию и другие наборы датчиков без повторного измерения.
 
-## Remaining hardware/account checks
-
-CPU temperature, CPU clock, and fan RPM with elevation were not independently validated in the replacement app. The OEM utility successfully displayed temperature/RPM, according to its owner. Availability of equivalent readings through the official public dependency can vary by board/driver access.
-
-Ordinary/elevated autostart code and XML are present; actual login autostart under the interactive user's account has not been validated. The restricted development account denied writes to HKCU Run. No user autostart was enabled by the tests.
-
-The built-in self-test does not write USB reports or register autostart. Hardware benchmarking with `--send` is an explicit diagnostic action; the OEM display writer should be stopped first.
-
-## Version 1.3.1 — owner verification, 2026-10-07
-
-The owner installed the combined package and supplied a screenshot showing CPU temperature 44 °C. The initial USB send failed with Win32 31 even in clock mode; after restarting Windows, the owner confirmed operation. No alternative report length was deployed and the USB protocol was not changed. The exact transient failure cause remains unknown.
-
-The screenshot showed about 0.99 ms per polling operation and 61 MB memory at a 2-second interval. This is a single observation, not a controlled CPU-usage benchmark. Earlier measurements above apply only to their stated builds/configurations.
-
-Installer tests cover safe ZIP paths and hashes, original driver signature, version/exit-code handling, file deployment rollback, preservation of unknown files, real Cyrillic shortcut save/readback from an MTA worker and continuation after optional shortcut failure. CPU fan channel mapping and actual login autostart remain unverified. The earlier CPU-temperature validation limitation above is superseded by this owner confirmation, not by a claim that all sensor modes work on every board.
+Встроенная самопроверка не отправляет USB-команды и не регистрирует автозапуск. Диагностика с параметром `--send` выполняет реальную передачу; перед её запуском следует закрыть Digital и другие программы управления этим дисплеем.
