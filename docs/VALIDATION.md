@@ -32,3 +32,11 @@ CPU temperature, CPU clock, and fan RPM with elevation were not independently va
 Ordinary/elevated autostart code and XML are present; actual login autostart under the interactive user's account has not been validated. The restricted development account denied writes to HKCU Run. No user autostart was enabled by the tests.
 
 The built-in self-test does not write USB reports or register autostart. Hardware benchmarking with `--send` is an explicit diagnostic action; the OEM display writer should be stopped first.
+
+## Version 1.3.1 — owner verification, 2026-10-07
+
+The owner installed the combined package and supplied a screenshot showing CPU temperature 44 °C. The initial USB send failed with Win32 31 even in clock mode; after restarting Windows, the owner confirmed operation. No alternative report length was deployed and the USB protocol was not changed. The exact transient failure cause remains unknown.
+
+The screenshot showed about 0.99 ms per polling operation and 61 MB memory at a 2-second interval. This is a single observation, not a controlled CPU-usage benchmark. Earlier measurements above apply only to their stated builds/configurations.
+
+Installer tests cover safe ZIP paths and hashes, original driver signature, version/exit-code handling, file deployment rollback, preservation of unknown files, real Cyrillic shortcut save/readback from an MTA worker and continuation after optional shortcut failure. CPU fan channel mapping and actual login autostart remain unverified. The earlier CPU-temperature validation limitation above is superseded by this owner confirmation, not by a claim that all sensor modes work on every board.

@@ -1,16 +1,14 @@
 # Changelog
 
-## 1.1.0
+## 1.3.1 — 2026-10-07
 
-- Select the Windows, 12-hour, or 24-hour clock format.
-- Show AM/PM in the app preview; handle midnight/noon correctly.
-- Add separate clock seconds and date DDMM metrics.
-- Preserve old settings XML and saved GPU/fan choices.
-- Public source packaging, bilingual instructions, official NuGet dependency restoration, and self-tests.
+- Offline single installer: controller, LibreHardwareMonitor 0.9.6 and signed official PawnIO 2.2.0, no separate AIDA64/Digital requirement.
+- Replace the old WinRing0 sensor backend. Preserve Windows security settings and verify the original driver installer's hash/signature.
+- Install, update and uninstall support; preserve settings and an existing compatible shared driver.
+- Fix Cyrillic Start menu shortcuts through IShellLinkW/IPersistFile on an STA thread. Optional shortcut failure no longer aborts installation.
+- CPU temperature confirmed by the owner; physical USB display recovered after a Windows restart. USB protocol unchanged.
+- Document Defender's confirmed WinRing0 detection and distinguish it from a separate transient USB failure.
 
-## 1.0.0 — initial local version
+## Earlier local versions
 
-- Independent Q590-SD HID controller, configurable metrics and refresh interval.
-- Tray mode, pause/resume, low process priority, and selectable autostart.
-- Native Windows CPU/RAM counters, NVIDIA NVML, optional hardware monitoring.
-- Hardware update verified and visually confirmed by the cooler owner.
+1.1 added Windows/12/24-hour clocks, AM/PM preview, seconds and DDMM dates. Initial versions provided selectable metrics, interval, tray mode and autostart. The first local sensor backend used WinRing0 and is superseded by 1.3.1.

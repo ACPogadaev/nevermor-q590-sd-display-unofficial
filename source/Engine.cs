@@ -7,10 +7,11 @@ using System.Linq;
 using System.Threading;
 using System.Xml.Serialization;
 using LibreHardwareMonitor.Hardware;
+using LibreHardwareMonitor.PawnIo;
 
 namespace NevermorDisplay {
     public sealed class Settings {
-        public string Upper="cpu_load",Lower="gpu_temp",FanId="";
+        public string Upper="cpu_load",Lower="cpu_temp",FanId="";
         public string ClockFormat="system";
         public int UpperCustom=1234,LowerCustom=53,GpuIndex=0;
         public double Interval=2;
@@ -20,17 +21,19 @@ namespace NevermorDisplay {
             if(Double.IsNaN(Interval))Interval=2;Interval=Math.Max(1,Math.Min(60,Interval));
             UpperCustom=Math.Max(0,Math.Min(9999,UpperCustom));LowerCustom=Math.Max(0,Math.Min(99,LowerCustom));GpuIndex=Math.Max(0,GpuIndex);
             if(!Metrics.All.Any(x=>x.Id==Upper))Upper="cpu_load";
-            if(!Metrics.All.Any(x=>x.Id==Lower&&x.Lower))Lower="gpu_temp";
+            if(!Metrics.All.Any(x=>x.Id==Lower&&x.Lower))Lower="cpu_temp";
             if(ClockFormat!="system"&&ClockFormat!="12"&&ClockFormat!="24")ClockFormat="system";
         }
     }
     internal static class Store {
-        internal static readonly string DirectoryPath=AppDomain.CurrentDomain.BaseDirectory;
+        internal static readonly bool IsInstalled=File.Exists(Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"installed.flag"));
+        internal static readonly string DirectoryPath=IsInstalled?Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),"NevermorDisplay"):AppDomain.CurrentDomain.BaseDirectory;
         internal static readonly string SettingsPath=Path.Combine(DirectoryPath,"settings.xml");
         internal static Settings Load() {
             try{using(var f=File.OpenRead(SettingsPath)){var s=(Settings)new XmlSerializer(typeof(Settings)).Deserialize(f);s.Validate();return s;}}catch{return new Settings();}
         }
         internal static void Save(Settings s) {
+            Directory.CreateDirectory(DirectoryPath);
             s.Validate();string tmp=SettingsPath+".tmp";
             using(var f=new FileStream(tmp,FileMode.Create,FileAccess.Write,FileShare.None))new XmlSerializer(typeof(Settings)).Serialize(f,s);
             if(File.Exists(SettingsPath))File.Replace(tmp,SettingsPath,null);else File.Move(tmp,SettingsPath);
@@ -83,6 +86,8 @@ namespace NevermorDisplay {
         internal DateTime LocalTime;
     }
     internal sealed class Sensors : IDisposable {
+        internal static string DriverStatus(){try{return PawnIo.IsInstalled?"PawnIO "+PawnIo.Version:"PawnIO не установлен";}catch(Exception e){return "PawnIO: "+e.GetBaseException().Message;}}
+        internal static bool DriverReady {get{try{return PawnIo.IsInstalled&&PawnIo.Version>=new Version(2,2);}catch{return false;}}}
         private readonly Nvidia nvidia=new Nvidia();
         private Computer computer;
         private bool cpuFlag,fanFlag,gpuFlag;
@@ -137,7 +142,7 @@ namespace NevermorDisplay {
                 sample.Gpus.AddRange(nvidia.Names);
                 foreach(string id in new[]{settings.Upper,settings.Lower}.Distinct())if(id.StartsWith("gpu_"))sample.Values[id]=nvidia.Read(id,settings.GpuIndex);
             }
-            bool cpu=Metrics.NeedsCpu(settings)&&Native.Admin,fan=Metrics.NeedsFan(settings)&&Native.Admin;
+            bool cpu=Metrics.NeedsCpu(settings)&&Native.Admin&&DriverReady,fan=Metrics.NeedsFan(settings)&&Native.Admin&&DriverReady;
             Configure(cpu,fan,gpu&&!nativeGpu);
             if(computer!=null) {
                 var all=Flatten(computer.Hardware);
@@ -169,7 +174,8 @@ namespace NevermorDisplay {
             }
             if(!Native.Admin&&(Metrics.NeedsCpu(settings)||Metrics.NeedsFan(settings)))sample.Note="Для температуры / частоты CPU и оборотов нажмите «Запустить от администратора».";
             if(!String.IsNullOrEmpty(sensorError))sample.Note=sensorError;
-            if(settings.Upper=="cpu_temp"||settings.Lower=="cpu_temp")if(Native.Admin&&!sample.Values["cpu_temp"].HasValue)sample.Note="Температура CPU недоступна. Драйвер датчиков может быть заблокирован Windows; ноль не подставляется.";
+            if(Native.Admin&&(Metrics.NeedsCpu(settings)||Metrics.NeedsFan(settings))&&!DriverReady)sample.Note=DriverStatus()+". Для восстановления запустите единый установщик Nevermor Display 1.3.1 повторно, затем перезапустите приложение.";
+            else if(Native.Admin&&(settings.Upper=="cpu_temp"||settings.Lower=="cpu_temp")&&!sample.Values["cpu_temp"].HasValue&&String.IsNullOrEmpty(sensorError))sample.Note="Источник датчиков не предоставил температуру CPU. Сохраните диагностику через меню трея; ноль не подставляется.";
             return sample;
         }
         public void Dispose(){if(computer!=null)try{computer.Close();}catch{}computer=null;nvidia.Dispose();}

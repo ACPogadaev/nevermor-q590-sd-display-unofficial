@@ -163,8 +163,9 @@ namespace NevermorDisplay {
         internal const string Name="NevermorQ590Display";
         private const string RunKey=@"Software\Microsoft\Windows\CurrentVersion\Run";
         internal static string CurrentMode() {
-            using(var key=Registry.CurrentUser.OpenSubKey(RunKey))if(key!=null&&key.GetValue(Name)!=null)return "обычный";
-            try {Type t=Type.GetTypeFromProgID("Schedule.Service");dynamic service=Activator.CreateInstance(t);service.Connect();dynamic task=service.GetFolder("\\").GetTask(Name);return "с правами администратора";}catch{return "выключен";}
+            bool readable=true;
+            try{using(var key=Registry.CurrentUser.OpenSubKey(RunKey))if(key!=null&&key.GetValue(Name)!=null)return "обычный";}catch(System.Security.SecurityException){readable=false;}catch(UnauthorizedAccessException){readable=false;}
+            try {Type t=Type.GetTypeFromProgID("Schedule.Service");dynamic service=Activator.CreateInstance(t);service.Connect();dynamic task=service.GetFolder("\\").GetTask(Name);return "с правами администратора";}catch{return readable?"выключен":"недоступен";}
         }
         internal static string TaskXml(string exe,string sid) {
             return "<?xml version=\"1.0\" encoding=\"UTF-16\"?>"+

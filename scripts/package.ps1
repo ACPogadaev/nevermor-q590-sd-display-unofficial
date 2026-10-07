@@ -1,15 +1,18 @@
-$ErrorActionPreference = 'Stop'
-$repositoryPath = Split-Path -Parent $PSScriptRoot
-$applicationPath = Join-Path $repositoryPath 'build\app'
-if (!(Test-Path -LiteralPath (Join-Path $applicationPath 'NevermorDisplay.exe'))) { throw 'Build first.' }
-foreach ($privateFile in @('settings.xml','settings.xml.tmp','last-error.txt','diagnostics.txt')) {
-    if (Test-Path -LiteralPath (Join-Path $applicationPath $privateFile)) { throw ('Refusing to package local state: ' + $privateFile) }
+param([switch]$Offline,[string]$OutputDirectory)
+$ErrorActionPreference='Stop'
+$repositoryPath=Split-Path -Parent $PSScriptRoot
+$applicationPath=Join-Path $repositoryPath 'build\app'
+if(!(Test-Path -LiteralPath (Join-Path $applicationPath 'NevermorDisplay.exe'))){throw 'Build first.'}
+foreach($name in @('settings.xml','diagnostics.txt','last-error.txt','installed.flag')){
+    if(Test-Path -LiteralPath (Join-Path $applicationPath $name)){throw ('Refusing to package local state: '+$name)}
 }
-if (Get-ChildItem -LiteralPath $applicationPath -Recurse -Filter '*.pdb' -File) { throw 'Refusing to package debug symbols.' }
-$distributionPath = Join-Path $repositoryPath 'dist'
+$driver=Join-Path $repositoryPath '.packages\PawnIO_setup-2.2.0.exe'
+if(!(Test-Path -LiteralPath $driver)){
+    if($Offline){throw 'Missing cached official PawnIO installer'}
+    Invoke-WebRequest -Uri 'https://github.com/namazso/PawnIO.Setup/releases/download/2.2.0/PawnIO_setup.exe' -OutFile $driver -UseBasicParsing -TimeoutSec 60
+}
+$distributionPath=if($OutputDirectory){[IO.Path]::GetFullPath($OutputDirectory)}else{Join-Path $repositoryPath 'dist'}
 New-Item -ItemType Directory -Path $distributionPath -Force | Out-Null
-$archivePath = Join-Path $distributionPath 'NevermorDisplay-v1.1.0-win-x64.zip'
-Compress-Archive -Path (Join-Path $applicationPath '*') -DestinationPath $archivePath -Force
-$hash = Get-FileHash -LiteralPath $archivePath -Algorithm SHA256
-($hash.Hash.ToLowerInvariant() + '  ' + [IO.Path]::GetFileName($archivePath)) | Set-Content -LiteralPath (Join-Path $distributionPath 'SHA256SUMS.txt') -Encoding ascii
-Write-Host ('Packaged: ' + $archivePath)
+$output=Join-Path $distributionPath 'NevermorDisplay-1.3.1-Setup.exe'
+& (Join-Path $applicationPath 'installer\build.ps1') -DriverInstaller $driver -BuildDirectory (Join-Path $repositoryPath 'build\setup') -OutputPath $output
+Copy-Item -LiteralPath ($output+'.SHA256.txt') -Destination (Join-Path $distributionPath 'SHA256SUMS.txt') -Force

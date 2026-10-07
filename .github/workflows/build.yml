@@ -10,17 +10,17 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Build with official pinned NuGet dependencies
+      - name: Build with verified pinned official NuGet dependencies
         shell: powershell
         run: ./scripts/build.ps1
       - name: Self-test without USB writes
         shell: powershell
         run: ./scripts/test.ps1
-      - name: Package portable app
+      - name: Build offline combined installer without installing driver
         shell: powershell
         run: ./scripts/package.ps1
       - uses: actions/upload-artifact@v4
         with:
-          name: NevermorDisplay-win-x64
+          name: NevermorDisplay-1.3.1-Setup
           path: dist/*
           if-no-files-found: error

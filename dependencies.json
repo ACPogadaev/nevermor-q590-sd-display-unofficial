@@ -1,0 +1,140 @@
+[
+  {
+    "package": "LibreHardwareMonitorLib",
+    "version": "0.9.6",
+    "license": "MPL-2.0",
+    "framework": "net472",
+    "dlls": [
+      "LibreHardwareMonitorLib.dll"
+    ],
+    "sha256": "60db5e0d9135f4658b385cae139d3b9eaeac0a8e867d322d20b5dbe4c4039197"
+  },
+  {
+    "package": "DiskInfoToolkit",
+    "version": "1.1.2",
+    "license": "MPL-2.0",
+    "framework": "net472",
+    "dlls": [
+      "DiskInfoToolkit.dll"
+    ],
+    "sha256": "a997f0b3701e20b2ab9296e07ee4f74f877e75015277fb6bd314ade1e2c4db13"
+  },
+  {
+    "package": "BlackSharp.Core",
+    "version": "1.0.7",
+    "license": "MPL-2.0",
+    "framework": "net472",
+    "dlls": [
+      "BlackSharp.Core.dll"
+    ],
+    "sha256": "4f713fe18ee7c85a7c49f28309adaa815714333326aa81fd4d4a81619ecaa0ab"
+  },
+  {
+    "package": "System.Memory",
+    "version": "4.6.3",
+    "license": "MIT",
+    "framework": "net462",
+    "dlls": [
+      "System.Memory.dll"
+    ],
+    "sha256": "26078aeb758c9ae985e8bf851f973026061da6a5eb4837204d0c2d2204c72955"
+  },
+  {
+    "package": "System.Buffers",
+    "version": "4.6.1",
+    "license": "MIT",
+    "framework": "net462",
+    "dlls": [
+      "System.Buffers.dll"
+    ],
+    "sha256": "b00451e91d016fbec091ad1e361f3a7015e1d91d4047f7e48a74455b2a673d79"
+  },
+  {
+    "package": "System.Numerics.Vectors",
+    "version": "4.6.1",
+    "license": "MIT",
+    "framework": "net462",
+    "dlls": [
+      "System.Numerics.Vectors.dll"
+    ],
+    "sha256": "2bc500a86dcb02f2032d6d877f9e2d6e9e4a79080e57239b4198679d4031f2c7"
+  },
+  {
+    "package": "System.Runtime.CompilerServices.Unsafe",
+    "version": "6.1.2",
+    "license": "MIT",
+    "framework": "net462",
+    "dlls": [
+      "System.Runtime.CompilerServices.Unsafe.dll"
+    ],
+    "sha256": "5f6a7f53af3465f92beb6da873ebe0e496206c313313b98badee4355a6b25937"
+  },
+  {
+    "package": "HidSharp",
+    "version": "2.6.4",
+    "license": "LICENSE.txt",
+    "framework": "net35",
+    "dlls": [
+      "HidSharp.dll"
+    ],
+    "sha256": "cf55d4b4d7b42dc1d8496b7b592ba00d1ecd48a70bc07bd8dabd3e9976d108e7"
+  },
+  {
+    "package": "RAMSPDToolkit-NDD",
+    "version": "1.4.2",
+    "license": "MPL-2.0",
+    "framework": "net472",
+    "dlls": [
+      "RAMSPDToolkit-NDD.dll"
+    ],
+    "sha256": "57c893824a68c71538055f242586616d4205a671c300897c21b2a6f88270ce64"
+  },
+  {
+    "package": "System.Management",
+    "version": "10.0.2",
+    "license": "MIT",
+    "framework": "net462",
+    "dlls": [],
+    "sha256": "bb40e7e33254bd2a5fb66b6f476e1e9ea28f0f1c403172696afdbfb1f8b06221"
+  },
+  {
+    "package": "System.CodeDom",
+    "version": "10.0.2",
+    "license": "MIT",
+    "framework": "net462",
+    "dlls": [
+      "System.CodeDom.dll"
+    ],
+    "sha256": "30028b346c7b99ccdc484ea7edbdc7bd038b3c2f007e4e4cbfa3d45768651c2d"
+  },
+  {
+    "package": "System.Threading.AccessControl",
+    "version": "10.0.3",
+    "license": "MIT",
+    "framework": "net462",
+    "dlls": [
+      "System.Threading.AccessControl.dll"
+    ],
+    "sha256": "9f4f28238e13c6cc47b789a4a1d5647997747594dfcfd45c1526f9b671cde073"
+  },
+  {
+    "package": "System.Security.AccessControl",
+    "version": "6.0.0",
+    "license": "MIT",
+    "framework": "net461",
+    "dlls": [
+      "System.Security.AccessControl.dll"
+    ],
+    "sha256": "a8ec961016cdaf7123c92f9eb451bcff331bb8f8c0f8ef9d8bbd7b24ff42c728"
+  },
+  {
+    "package": "System.Security.Principal.Windows",
+    "version": "5.0.0",
+    "license": "MIT",
+    "framework": "net461",
+    "dlls": [
+      "System.Security.Principal.Windows.dll"
+    ],
+    "sha256": "081390c25f6f78592b28ada853c24514488a221fe9f9a24efaaf5373643ff3d6"
+  }
+]
