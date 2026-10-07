@@ -1,0 +1,26 @@
+name: Windows build and self-test
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build with official pinned NuGet dependencies
+        shell: powershell
+        run: ./scripts/build.ps1
+      - name: Self-test without USB writes
+        shell: powershell
+        run: ./scripts/test.ps1
+      - name: Package portable app
+        shell: powershell
+        run: ./scripts/package.ps1
+      - uses: actions/upload-artifact@v4
+        with:
+          name: NevermorDisplay-win-x64
+          path: dist/*
+          if-no-files-found: error

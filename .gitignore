@@ -1,0 +1,14 @@
+/build/
+/dist/
+/.packages/
+settings.xml
+settings.xml.tmp
+diagnostics.txt
+last-error.txt
+*.pdb
+*.exe
+*.dll
+*.nupkg
+*.zip
+*.user
+.vs/
