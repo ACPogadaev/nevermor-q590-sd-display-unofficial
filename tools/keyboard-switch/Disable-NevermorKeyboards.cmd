@@ -9,6 +9,7 @@ if not "%~1"=="" if /i not "%~1"=="--status" (
 
 rem For changes, use Run as administrator. The --status option is read-only.
 rem Match four present Keyboard collections under the confirmed display's USB parent.
+rem PnPUtil returns 0xE0000231 (-536870351) when it refuses to disable a critical device.
 "%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe" -NoLogo -NoProfile -NonInteractive -Command ^
     "$ErrorActionPreference = 'Stop';" ^
     "$action = $env:NEVERMOR_ACTION;" ^
@@ -28,12 +29,16 @@ rem Match four present Keyboard collections under the confirmed display's USB pa
     "$root = Get-UsbDeviceId $display[0].InstanceId;" ^
     "$rootPattern = '^USB\\' + $vidPid + '\\[^\\]+$';" ^
     "if ($root -notmatch $rootPattern) { throw 'Could not confirm the display USB device.' };" ^
-    "$keyboards = @(Get-PnpDevice -Class Keyboard -PresentOnly | Where-Object {" ^
+    "$allKeyboards = @(Get-PnpDevice -Class Keyboard -PresentOnly);" ^
+    "$keyboards = @($allKeyboards | Where-Object {" ^
     "    $_.InstanceId -match $keyboardPattern -and (Get-UsbDeviceId $_.InstanceId) -eq $root" ^
     "});" ^
     "$collections = @($keyboards | ForEach-Object { ($_.InstanceId -split '\\')[1] } | Sort-Object -Unique);" ^
     "if ($keyboards.Count -ne 4 -or $collections.Count -ne 4) { throw 'Could not confirm all four keyboard entries.' };" ^
     "if ($action -eq 'Disable' -and $display[0].Status -ne 'OK') { throw 'The display HID channel is not active.' };" ^
+    "$otherKeyboards = @($allKeyboards | Where-Object {" ^
+    "    $_.Status -eq 'OK' -and $_.InstanceId -notmatch ('^HID\\' + $vidPid + '&')" ^
+    "});" ^
     "$instanceIds = $keyboards.InstanceId;" ^
     "$failed = $false;" ^
     "if ($action -ne 'Status') {" ^
@@ -42,13 +47,26 @@ rem Match four present Keyboard collections under the confirmed display's USB pa
     "    foreach ($keyboard in $keyboards) {" ^
     "        $disabled = [string]$keyboard.ConfigManagerErrorCode -eq 'CM_PROB_DISABLED';" ^
     "        if (($action -eq 'Disable' -and $disabled) -or ($action -eq 'Enable' -and $keyboard.Status -eq 'OK')) { continue };" ^
-    "        & $pnpUtil $verb $keyboard.InstanceId;" ^
-    "        if ($LASTEXITCODE -ne 0) { $failed = $true; Write-Warning ('PnPUtil exit code: ' + $LASTEXITCODE) };" ^
+    "        $output = & $pnpUtil $verb $keyboard.InstanceId;" ^
+    "        $exitCode = $LASTEXITCODE;" ^
+    "        if ($action -eq 'Disable' -and $exitCode -eq -536870351) {" ^
+    "            if ($otherKeyboards.Count -gt 0) {" ^
+    "                Write-Host ('Retrying the confirmed display entry with /force: ' + $keyboard.InstanceId);" ^
+    "                $output = & $pnpUtil /disable-device $keyboard.InstanceId /force;" ^
+    "                $exitCode = $LASTEXITCODE;" ^
+    "            } else { Write-Warning 'Connect a working keyboard before retrying.' };" ^
+    "        };" ^
+    "        $output;" ^
+    "        if ($exitCode -eq 3010) { Write-Warning 'Windows requires a restart.' }" ^
+    "        elseif ($exitCode -ne 0) { $failed = $true; Write-Warning ('PnPUtil exit code: ' + $exitCode) };" ^
     "    };" ^
     "};" ^
     "$states = @(Get-PnpDevice -InstanceId $instanceIds);" ^
     "$states | Format-Table Status, ConfigManagerErrorCode, InstanceId -AutoSize;" ^
     "if ($action -eq 'Status') { exit 0 };" ^
+    "if ($action -eq 'Disable' -and (Get-PnpDevice -InstanceId $display[0].InstanceId).Status -ne 'OK') {" ^
+    "    throw 'Windows did not confirm the display HID channel. Run Restore-NevermorKeyboards.cmd.';" ^
+    "};" ^
     "$pending = @($states | Where-Object {" ^
     "    if ($action -eq 'Disable') { [string]$_.ConfigManagerErrorCode -ne 'CM_PROB_DISABLED' }" ^
     "    else { $_.Status -ne 'OK' }" ^

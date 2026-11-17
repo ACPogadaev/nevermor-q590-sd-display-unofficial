@@ -11,6 +11,8 @@
 
 На Windows 11 Smart App Control может блокировать скачанный `.cmd` из-за метки интернет-загрузки. В этом случае используйте [команды для Windows PowerShell](#если-windows-блокирует-exe) ниже.
 
+Если Windows отклоняет отключение как критическое (код `0xE0000231`), файл отключения повторяет команду с `/force` только для проверенных записей и при наличии другой активной записи класса Keyboard. Перед запуском убедитесь, что другая физическая клавиатура работает. `/force` поддерживается начиная с Windows 11 22H2. [Синтаксис PnPUtil](https://learn.microsoft.com/en-us/windows-hardware/drivers/devtest/pnputil-command-syntax#disable-device)
+
 Параметр `--status` в командной строке показывает состояние записей. По окончании отключения или восстановления файл показывает результат и ждёт нажатия клавиши.
 
 ## Графическая утилита
@@ -32,47 +34,67 @@
 ```powershell
 & {
     param([ValidateSet('Status', 'Disable', 'Enable')][string]$Action = 'Status')
-    $ErrorActionPreference = 'Stop'
-
-    function Get-UsbDeviceId([string]$InstanceId) {
-        $key = 'DEVPKEY_Device_Parent'
-        $parent = (Get-PnpDeviceProperty -InstanceId $InstanceId -KeyName $key).Data
-        (Get-PnpDeviceProperty -InstanceId $parent -KeyName $key).Data
-    }
-
-    $vidPid = 'VID_1A2C&PID_4E84'
+    $ErrorActionPreference = 'Stop';
+    $vidPid = 'VID_1A2C&PID_4E84';
+    function Get-UsbDeviceId([string]$instanceId) {
+        $key = 'DEVPKEY_Device_Parent';
+        $parent = (Get-PnpDeviceProperty -InstanceId $instanceId -KeyName $key).Data;
+        (Get-PnpDeviceProperty -InstanceId $parent -KeyName $key).Data;
+    };
+    $displayPattern = '^HID\\' + $vidPid + '&MI_01&COL07\\[^\\]+$';
+    $keyboardPattern = '^HID\\' + $vidPid + '&(MI_00|MI_01&COL0[456])\\[^\\]+$';
     $display = @(Get-PnpDevice -Class HIDClass -PresentOnly | Where-Object {
-        $_.InstanceId -match "^HID\\$vidPid&MI_01&COL07\\[^\\]+$" -and
+        $_.InstanceId -match $displayPattern -and
         (Get-PnpDeviceProperty -InstanceId $_.InstanceId -KeyName 'DEVPKEY_Device_HardwareIds').Data -contains 'HID_DEVICE_UP:FF01_U:0001'
-    })
-    if ($display.Count -ne 1) { throw 'Должен быть подключён ровно один дисплей Q590-SD.' }
-    $root = Get-UsbDeviceId $display[0].InstanceId
-    if ($root -notmatch "^USB\\$vidPid\\[^\\]+$") { throw 'USB-устройство дисплея не подтверждено.' }
-
-    $keyboards = @(Get-PnpDevice -Class Keyboard -PresentOnly | Where-Object {
-        $_.InstanceId -match "^HID\\$vidPid&(MI_00|MI_01&COL0[456])\\[^\\]+$" -and
-        (Get-UsbDeviceId $_.InstanceId) -eq $root
-    })
-    $collections = @($keyboards | ForEach-Object { ($_.InstanceId -split '\\')[1] } | Sort-Object -Unique)
-    if ($keyboards.Count -ne 4 -or $collections.Count -ne 4) {
-        throw 'Не удалось подтвердить все четыре клавиатурные записи дисплея.'
-    }
-    if ($Action -eq 'Disable' -and $display[0].Status -ne 'OK') {
-        throw 'HID-канал дисплея неактивен.'
-    }
-
-    $instanceIds = $keyboards.InstanceId
-    if ($Action -ne 'Status') {
-        $verb = if ($Action -eq 'Disable') { '/disable-device' } else { '/enable-device' }
-        foreach ($id in $instanceIds) {
-            pnputil.exe $verb $id
-            if ($LASTEXITCODE -ne 0) {
-                Write-Warning "Запись $id. Код завершения PnPUtil: $LASTEXITCODE."
-            }
-        }
-    }
-    Get-PnpDevice -InstanceId $instanceIds |
-        Format-Table Status, ConfigManagerErrorCode, InstanceId -AutoSize
+    });
+    if ($display.Count -ne 1) { throw 'Connect exactly one supported Nevermor Q590-SD display.' };
+    $root = Get-UsbDeviceId $display[0].InstanceId;
+    $rootPattern = '^USB\\' + $vidPid + '\\[^\\]+$';
+    if ($root -notmatch $rootPattern) { throw 'Could not confirm the display USB device.' };
+    $allKeyboards = @(Get-PnpDevice -Class Keyboard -PresentOnly);
+    $keyboards = @($allKeyboards | Where-Object {
+        $_.InstanceId -match $keyboardPattern -and (Get-UsbDeviceId $_.InstanceId) -eq $root
+    });
+    $collections = @($keyboards | ForEach-Object { ($_.InstanceId -split '\\')[1] } | Sort-Object -Unique);
+    if ($keyboards.Count -ne 4 -or $collections.Count -ne 4) { throw 'Could not confirm all four keyboard entries.' };
+    if ($action -eq 'Disable' -and $display[0].Status -ne 'OK') { throw 'The display HID channel is not active.' };
+    $otherKeyboards = @($allKeyboards | Where-Object {
+        $_.Status -eq 'OK' -and $_.InstanceId -notmatch ('^HID\\' + $vidPid + '&')
+    });
+    $instanceIds = $keyboards.InstanceId;
+    $failed = $false;
+    if ($action -ne 'Status') {
+        $pnpUtil = Join-Path $env:SystemRoot 'System32\pnputil.exe';
+        $verb = if ($action -eq 'Disable') { '/disable-device' } else { '/enable-device' };
+        foreach ($keyboard in $keyboards) {
+            $disabled = [string]$keyboard.ConfigManagerErrorCode -eq 'CM_PROB_DISABLED';
+            if (($action -eq 'Disable' -and $disabled) -or ($action -eq 'Enable' -and $keyboard.Status -eq 'OK')) { continue };
+            $output = & $pnpUtil $verb $keyboard.InstanceId;
+            $exitCode = $LASTEXITCODE;
+            if ($action -eq 'Disable' -and $exitCode -eq -536870351) {
+                if ($otherKeyboards.Count -gt 0) {
+                    Write-Host ('Retrying the confirmed display entry with /force: ' + $keyboard.InstanceId);
+                    $output = & $pnpUtil /disable-device $keyboard.InstanceId /force;
+                    $exitCode = $LASTEXITCODE;
+                } else { Write-Warning 'Connect a working keyboard before retrying.' };
+            };
+            $output;
+            if ($exitCode -eq 3010) { Write-Warning 'Windows requires a restart.' }
+            elseif ($exitCode -ne 0) { $failed = $true; Write-Warning ('PnPUtil exit code: ' + $exitCode) };
+        };
+    };
+    $states = @(Get-PnpDevice -InstanceId $instanceIds);
+    $states | Format-Table Status, ConfigManagerErrorCode, InstanceId -AutoSize;
+    if ($action -eq 'Status') { return };
+    if ($action -eq 'Disable' -and (Get-PnpDevice -InstanceId $display[0].InstanceId).Status -ne 'OK') {
+        throw 'Windows did not confirm the display HID channel. Run Restore-NevermorKeyboards.cmd.';
+    };
+    $pending = @($states | Where-Object {
+        if ($action -eq 'Disable') { [string]$_.ConfigManagerErrorCode -ne 'CM_PROB_DISABLED' }
+        else { $_.Status -ne 'OK' }
+    });
+    if ($failed -or $states.Count -ne 4 -or $pending.Count) { throw 'Windows has not confirmed the requested state for all four entries.' };
+    Write-Host ('Done: ' + $action + ' confirmed for all four entries.');
 } Status
 ```
 
