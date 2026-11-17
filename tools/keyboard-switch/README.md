@@ -13,6 +13,8 @@
 
 Если Windows отклоняет отключение как критическое (код `0xE0000231`), файл отключения повторяет команду с `/force` только для проверенных записей и при наличии другой активной записи класса Keyboard. Перед запуском убедитесь, что другая физическая клавиатура работает. `/force` поддерживается начиная с Windows 11 22H2. [Синтаксис PnPUtil](https://learn.microsoft.com/en-us/windows-hardware/drivers/devtest/pnputil-command-syntax#disable-device)
 
+Код `3010` означает, что Windows сохранила изменение и применит его при перезагрузке. До неё текущий статус может оставаться `OK`, а столбец `DisableConfigured` уже покажет `True`. Чтобы отменить сохранённое отключение, запустите файл восстановления. [Коды возврата PnPUtil](https://learn.microsoft.com/en-us/windows-hardware/drivers/devtest/pnputil-return-values)
+
 Параметр `--status` в командной строке показывает состояние записей. По окончании отключения или восстановления файл показывает результат и ждёт нажатия клавиши.
 
 ## Графическая утилита
@@ -41,6 +43,18 @@
         $parent = (Get-PnpDeviceProperty -InstanceId $instanceId -KeyName $key).Data;
         (Get-PnpDeviceProperty -InstanceId $parent -KeyName $key).Data;
     };
+    function Get-KeyboardStates([string[]]$ids) {
+        foreach ($device in (Get-PnpDevice -InstanceId $ids)) {
+            $flags = (Get-PnpDeviceProperty -InstanceId $device.InstanceId -KeyName 'DEVPKEY_Device_ConfigFlags').Data;
+            if ($null -eq $flags) { throw ('Missing configuration flags: ' + $device.InstanceId) };
+            [pscustomobject]@{
+                Status = $device.Status;
+                Problem = [string]$device.ConfigManagerErrorCode;
+                DisableConfigured = ($flags -band 1) -ne 0;
+                InstanceId = $device.InstanceId
+            };
+        };
+    };
     $displayPattern = '^HID\\' + $vidPid + '&MI_01&COL07\\[^\\]+$';
     $keyboardPattern = '^HID\\' + $vidPid + '&(MI_00|MI_01&COL0[456])\\[^\\]+$';
     $display = @(Get-PnpDevice -Class HIDClass -PresentOnly | Where-Object {
@@ -62,38 +76,63 @@
         $_.Status -eq 'OK' -and $_.InstanceId -notmatch ('^HID\\' + $vidPid + '&')
     });
     $instanceIds = $keyboards.InstanceId;
+    $states = @(Get-KeyboardStates $instanceIds);
+    if ($states.Count -ne 4) { throw 'Could not read the state of all four entries.' };
     $failed = $false;
+    $restartRequested = @{};
     if ($action -ne 'Status') {
         $pnpUtil = Join-Path $env:SystemRoot 'System32\pnputil.exe';
         $verb = if ($action -eq 'Disable') { '/disable-device' } else { '/enable-device' };
-        foreach ($keyboard in $keyboards) {
-            $disabled = [string]$keyboard.ConfigManagerErrorCode -eq 'CM_PROB_DISABLED';
-            if (($action -eq 'Disable' -and $disabled) -or ($action -eq 'Enable' -and $keyboard.Status -eq 'OK')) { continue };
-            $output = & $pnpUtil $verb $keyboard.InstanceId;
-            $exitCode = $LASTEXITCODE;
-            if ($action -eq 'Disable' -and $exitCode -eq -536870351) {
-                if ($otherKeyboards.Count -gt 0) {
-                    Write-Host ('Retrying the confirmed display entry with /force: ' + $keyboard.InstanceId);
-                    $output = & $pnpUtil /disable-device $keyboard.InstanceId /force;
-                    $exitCode = $LASTEXITCODE;
-                } else { Write-Warning 'Connect a working keyboard before retrying.' };
+        $previousEncoding = [Console]::OutputEncoding;
+        try {
+            [Console]::OutputEncoding = [Text.Encoding]::Default;
+            foreach ($entry in $states) {
+                if ($action -eq 'Disable' -and $entry.DisableConfigured) { continue };
+                if ($action -eq 'Enable' -and -not $entry.DisableConfigured -and $entry.Status -eq 'OK') { continue };
+                $output = & $pnpUtil $verb $entry.InstanceId;
+                $exitCode = $LASTEXITCODE;
+                if ($action -eq 'Disable' -and $exitCode -eq -536870351) {
+                    if ($otherKeyboards.Count -gt 0) {
+                        Write-Host ('Retrying the confirmed display entry with /force: ' + $entry.InstanceId);
+                        $output = & $pnpUtil /disable-device $entry.InstanceId /force;
+                        $exitCode = $LASTEXITCODE;
+                    } else { Write-Warning 'Connect a working keyboard before retrying.' };
+                };
+                $output;
+                if ($exitCode -eq 3010) { $restartRequested[$entry.InstanceId] = $true }
+                elseif ($exitCode -ne 0) { $failed = $true; Write-Warning ('PnPUtil exit code: ' + $exitCode) };
             };
-            $output;
-            if ($exitCode -eq 3010) { Write-Warning 'Windows requires a restart.' }
-            elseif ($exitCode -ne 0) { $failed = $true; Write-Warning ('PnPUtil exit code: ' + $exitCode) };
+        } finally {
+            [Console]::OutputEncoding = $previousEncoding;
         };
+        $states = @(Get-KeyboardStates $instanceIds);
     };
-    $states = @(Get-PnpDevice -InstanceId $instanceIds);
-    $states | Format-Table Status, ConfigManagerErrorCode, InstanceId -AutoSize;
-    if ($action -eq 'Status') { return };
+    $states | Format-Table Status, Problem, DisableConfigured, InstanceId -AutoSize;
+    if ($action -eq 'Status') {
+        if (@($states | Where-Object { $_.DisableConfigured -and $_.Status -eq 'OK' }).Count) {
+            Write-Host 'Disable is configured. Restart Windows to apply it.';
+        };
+        return;
+    };
     if ($action -eq 'Disable' -and (Get-PnpDevice -InstanceId $display[0].InstanceId).Status -ne 'OK') {
         throw 'Windows did not confirm the display HID channel. Run Restore-NevermorKeyboards.cmd.';
     };
+    $disable = $action -eq 'Disable';
+    $unsaved = @($states | Where-Object { $_.DisableConfigured -ne $disable });
     $pending = @($states | Where-Object {
-        if ($action -eq 'Disable') { [string]$_.ConfigManagerErrorCode -ne 'CM_PROB_DISABLED' }
+        if ($disable) { $_.Problem -ne 'CM_PROB_DISABLED' }
         else { $_.Status -ne 'OK' }
     });
-    if ($failed -or $states.Count -ne 4 -or $pending.Count) { throw 'Windows has not confirmed the requested state for all four entries.' };
+    $unexpected = @($pending | Where-Object {
+        -not $restartRequested.ContainsKey($_.InstanceId) -and -not ($disable -and $_.Status -eq 'OK')
+    });
+    if ($failed -or $states.Count -ne 4 -or $unsaved.Count -or $unexpected.Count) {
+        throw 'Windows has not confirmed the requested state for all four entries.';
+    };
+    if ($restartRequested.Count -or $pending.Count) {
+        Write-Host ('Done: ' + $action + ' saved for all four entries. Restart Windows to apply the change.');
+        return;
+    };
     Write-Host ('Done: ' + $action + ' confirmed for all four entries.');
 } Status
 ```
